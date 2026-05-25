@@ -21,6 +21,7 @@ import { api } from '@/lib/api-client';
 import { Product, Branch } from '@shared/types';
 import { toast } from 'sonner';
 import { ArrowRight, Loader2, AlertCircle } from 'lucide-react';
+import { cn } from '@/lib/utils';
 interface TransferModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
