@@ -34,13 +34,12 @@ const productSchema = z.object({
   name: z.string().min(2, "Name is required"),
   sku: z.string().min(3, "SKU is required"),
   category: z.string().min(1, "Category is required"),
-  retailPrice: z.coerce.number().min(0.01, "Price must be at least 0.01"),
-  wholesalePrice: z.coerce.number().min(0.01, "Price must be at least 0.01"),
-  totalStock: z.coerce.number().min(0, "Stock cannot be negative"),
+  retailPrice: z.coerce.number().min(0.01),
+  wholesalePrice: z.coerce.number().min(0.01),
+  totalStock: z.coerce.number().min(0),
   unit: z.string().min(1, "Unit is required"),
   expiryDate: z.string().min(1, "Expiry date is required"),
 });
-type ProductFormValues = z.infer<typeof productSchema>;
 interface ProductModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -48,7 +47,7 @@ interface ProductModalProps {
   onSuccess: () => void;
 }
 export function ProductModal({ open, onOpenChange, product, onSuccess }: ProductModalProps) {
-  const form = useForm<ProductFormValues>({
+  const form = useForm<z.infer<typeof productSchema>>({
     resolver: zodResolver(productSchema),
     defaultValues: {
       name: '',
@@ -62,33 +61,31 @@ export function ProductModal({ open, onOpenChange, product, onSuccess }: Product
     },
   });
   useEffect(() => {
-    if (open) {
-      if (product) {
-        form.reset({
-          name: product.name,
-          sku: product.sku,
-          category: product.category,
-          retailPrice: product.retailPrice,
-          wholesalePrice: product.wholesalePrice,
-          totalStock: product.totalStock,
-          unit: product.unit,
-          expiryDate: product.expiryDate,
-        });
-      } else {
-        form.reset({
-          name: '',
-          sku: '',
-          category: '',
-          retailPrice: 0,
-          wholesalePrice: 0,
-          totalStock: 0,
-          unit: 'Bottle',
-          expiryDate: '',
-        });
-      }
+    if (product) {
+      form.reset({
+        name: product.name,
+        sku: product.sku,
+        category: product.category,
+        retailPrice: product.retailPrice,
+        wholesalePrice: product.wholesalePrice,
+        totalStock: product.totalStock,
+        unit: product.unit,
+        expiryDate: product.expiryDate,
+      });
+    } else {
+      form.reset({
+        name: '',
+        sku: '',
+        category: '',
+        retailPrice: 0,
+        wholesalePrice: 0,
+        totalStock: 0,
+        unit: 'Bottle',
+        expiryDate: '',
+      });
     }
-  }, [product, open, form]);
-  const onSubmit = async (values: ProductFormValues) => {
+  }, [product, form, open]);
+  const onSubmit = async (values: z.infer<typeof productSchema>) => {
     try {
       await api('/api/products', {
         method: 'POST',
@@ -101,7 +98,6 @@ export function ProductModal({ open, onOpenChange, product, onSuccess }: Product
       onSuccess();
     } catch (error) {
       toast.error("Failed to save product");
-      console.error(error);
     }
   };
   return (
@@ -143,7 +139,7 @@ export function ProductModal({ open, onOpenChange, product, onSuccess }: Product
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Category</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value || ""}>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
                       </FormControl>

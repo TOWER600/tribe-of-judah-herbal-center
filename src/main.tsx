@@ -16,6 +16,7 @@ import PosPage from '@/pages/PosPage'
 import AdminDashboard from '@/pages/AdminDashboard'
 import InventoryPage from '@/pages/InventoryPage'
 import ReportsPage from '@/pages/ReportsPage'
+import SettingsPage from '@/pages/SettingsPage'
 import { AdminLayout } from '@/components/layout/AdminLayout'
 import { PosLayout } from '@/components/layout/PosLayout'
 const queryClient = new QueryClient();
@@ -63,7 +64,7 @@ const router = createBrowserRouter([
     path: "/admin/settings",
     element: (
       <AdminLayout>
-        <div className="p-8 text-center text-slate-500 italic">Settings Module (Phase 4)</div>
+        <SettingsPage />
       </AdminLayout>
     ),
   }

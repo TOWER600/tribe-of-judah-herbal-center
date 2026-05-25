@@ -20,8 +20,7 @@ import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api-client';
 import { Product, Branch } from '@shared/types';
 import { toast } from 'sonner';
-import { ArrowRight, Loader2, AlertCircle } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { ArrowRight, Loader2 } from 'lucide-react';
 interface TransferModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -37,55 +36,35 @@ export function TransferModal({ open, onOpenChange, product, onSuccess }: Transf
     queryKey: ['branches'],
     queryFn: () => api<Branch[]>('/api/branches')
   });
-  if (!product && open) {
-    return (
-      <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent>
-          <div className="p-6 text-center space-y-4">
-            <AlertCircle className="w-12 h-12 text-amber-500 mx-auto" />
-            <p className="font-medium">No product selected for transfer.</p>
-            <Button onClick={() => onOpenChange(false)}>Close</Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-    );
-  }
   const handleTransfer = async () => {
-    if (!product || !fromBranch || !toBranch) {
-      toast.error("Please select source and destination branches");
+    if (!product || !fromBranch || !toBranch || fromBranch === toBranch) {
+      toast.error("Invalid transfer parameters");
       return;
     }
-    if (fromBranch === toBranch) {
-      toast.error("Source and destination branches must be different");
-      return;
-    }
-    const qty = parseInt(quantity, 10);
-    if (isNaN(qty) || qty <= 0 || qty > product.totalStock) {
-      toast.error(`Invalid quantity. Must be a whole number between 1 and ${product.totalStock}`);
+    const qty = parseInt(quantity);
+    if (qty <= 0 || qty > product.totalStock) {
+      toast.error("Invalid quantity");
       return;
     }
     setIsSubmitting(true);
     try {
+      // Logic for stock transfer (Simplified: just updating totalStock in this demo)
+      // In a multi-branch entity system, you'd decrement source and increment target
       await api('/api/products', {
         method: 'POST',
         body: JSON.stringify({
           ...product,
-          totalStock: product.totalStock - qty
+          totalStock: product.totalStock - qty // Just showing deduction for demo
         }),
       });
-      const fromName = branches?.find(b => b.id === fromBranch)?.name || 'Source';
-      const toName = branches?.find(b => b.id === toBranch)?.name || 'Destination';
-      toast.success(`Inventory updated: ${qty} ${product.unit}s moving from ${fromName} to ${toName}`);
+      toast.success(`Moved ${qty} units from ${branches?.find(b => b.id === fromBranch)?.name} to ${branches?.find(b => b.id === toBranch)?.name}`);
       onSuccess();
     } catch (error) {
-      toast.error("Stock transfer registry failed");
-      console.error(error);
+      toast.error("Transfer failed");
     } finally {
       setIsSubmitting(false);
     }
   };
-  const parsedQty = Math.floor(parseFloat(quantity) || 0);
-  const remainingQty = Math.max(0, (product?.totalStock || 0) - parsedQty);
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
@@ -102,7 +81,7 @@ export function TransferModal({ open, onOpenChange, product, onSuccess }: Transf
                 <SelectTrigger><SelectValue placeholder="From" /></SelectTrigger>
                 <SelectContent>
                   {branches?.map(b => (
-                    <SelectItem key={b.id} value={b.id}>{b.name.split(' - ').pop()}</SelectItem>
+                    <SelectItem key={b.id} value={b.id}>{b.name.split(' - ')[1]}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -114,7 +93,7 @@ export function TransferModal({ open, onOpenChange, product, onSuccess }: Transf
                 <SelectTrigger><SelectValue placeholder="To" /></SelectTrigger>
                 <SelectContent>
                   {branches?.map(b => (
-                    <SelectItem key={b.id} value={b.id}>{b.name.split(' - ').pop()}</SelectItem>
+                    <SelectItem key={b.id} value={b.id}>{b.name.split(' - ')[1]}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -122,36 +101,29 @@ export function TransferModal({ open, onOpenChange, product, onSuccess }: Transf
           </div>
           <div className="space-y-2">
             <div className="flex justify-between items-center">
-              <Label>Transfer Quantity (Whole {product?.unit}s)</Label>
-              <span className="text-xs text-muted-foreground font-medium">
-                Max: {product?.totalStock}
-              </span>
+              <Label>Transfer Quantity</Label>
+              <span className="text-xs text-muted-foreground">Available: {product?.totalStock} {product?.unit}s</span>
             </div>
-            <Input
-              type="number"
-              value={quantity}
-              onChange={(e) => setQuantity(e.target.value.replace(/[^0-9]/g, ''))}
-              className="text-lg font-bold text-center h-12 bg-slate-50 dark:bg-slate-800"
-              min="1"
-              step="1"
-              max={product?.totalStock}
+            <Input 
+              type="number" 
+              value={quantity} 
+              onChange={(e) => setQuantity(e.target.value)}
+              className="text-lg font-bold text-center h-12"
             />
           </div>
-          <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl text-sm border border-slate-100 dark:border-slate-800">
-            <p className="font-bold text-slate-500 mb-2 uppercase text-[10px] tracking-widest">Inventory Impact</p>
+          <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-xl text-sm border border-slate-100 dark:border-slate-800">
+            <p className="font-medium text-slate-500 mb-2">Inventory Impact</p>
             <div className="flex justify-between">
               <span>Remaining at Source:</span>
-              <span className={cn("font-bold", remainingQty < 10 ? "text-red-500" : "text-emerald-600")}>
-                {remainingQty} {product?.unit}s
-              </span>
+              <span className="font-bold">{Math.max(0, (product?.totalStock || 0) - parseInt(quantity || '0'))} {product?.unit}s</span>
             </div>
           </div>
         </div>
         <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button
-            className="bg-emerald-600 hover:bg-emerald-700 min-w-[140px] font-bold"
-            disabled={isSubmitting || parsedQty <= 0 || parsedQty > (product?.totalStock || 0) || !fromBranch || !toBranch || fromBranch === toBranch}
+          <Button 
+            className="bg-emerald-600 hover:bg-emerald-700 min-w-[140px]"
+            disabled={isSubmitting}
             onClick={handleTransfer}
           >
             {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Initiate Transfer"}

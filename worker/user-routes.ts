@@ -9,6 +9,14 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     const page = await BranchEntity.list(c.env);
     return ok(c, page.items);
   });
+  app.post('/api/branches', async (c) => {
+    const data = await c.req.json();
+    const branch = await BranchEntity.create(c.env, {
+      ...data,
+      id: crypto.randomUUID()
+    });
+    return ok(c, branch);
+  });
   // PRODUCTS
   app.get('/api/products', async (c) => {
     await ProductEntity.ensureSeed(c.env);
@@ -26,11 +34,18 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
   app.post('/api/products', async (c) => {
     const data = await c.req.json();
     if (!data.name || !data.sku) return bad(c, 'name and sku required');
-    const product = await ProductEntity.create(c.env, { 
-      ...data, 
-      id: data.id || crypto.randomUUID() 
-    });
-    return ok(c, product);
+    
+    if (data.id) {
+      const ent = new ProductEntity(c.env, data.id);
+      const updated = await ent.mutate(s => ({ ...s, ...data }));
+      return ok(c, updated);
+    } else {
+      const product = await ProductEntity.create(c.env, {
+        ...data,
+        id: crypto.randomUUID()
+      });
+      return ok(c, product);
+    }
   });
   // SALES
   app.get('/api/sales', async (c) => {
