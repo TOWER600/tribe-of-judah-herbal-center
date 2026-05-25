@@ -49,14 +49,14 @@ export function CartSidebar() {
                     <p className="text-xs text-emerald-600 font-medium">₵{price.toFixed(2)} / unit</p>
                   </div>
                   <div className="flex items-center gap-2 bg-white dark:bg-slate-900 p-1 rounded-lg border border-slate-200 dark:border-slate-700">
-                    <button
+                    <button 
                       className="p-1 hover:text-emerald-600 transition-colors"
                       onClick={() => updateQuantity(item.id, item.quantity - 1)}
                     >
                       <Minus className="w-3.5 h-3.5" />
                     </button>
                     <span className="w-6 text-center text-sm font-bold">{item.quantity}</span>
-                    <button
+                    <button 
                       className="p-1 hover:text-emerald-600 transition-colors"
                       onClick={() => updateQuantity(item.id, item.quantity + 1)}
                     >
@@ -88,7 +88,7 @@ export function CartSidebar() {
           </div>
         </div>
         <CheckoutModal total={total}>
-          <Button
+          <Button 
             className="w-full h-16 text-lg font-bold bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-600/20 rounded-2xl gap-2"
             disabled={cartItems.length === 0}
           >
