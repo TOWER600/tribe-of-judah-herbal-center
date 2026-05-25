@@ -14,6 +14,8 @@ import '@/index.css'
 import { HomePage } from '@/pages/HomePage'
 import PosPage from '@/pages/PosPage'
 import AdminDashboard from '@/pages/AdminDashboard'
+import InventoryPage from '@/pages/InventoryPage'
+import ReportsPage from '@/pages/ReportsPage'
 import { AdminLayout } from '@/components/layout/AdminLayout'
 import { PosLayout } from '@/components/layout/PosLayout'
 const queryClient = new QueryClient();
@@ -45,7 +47,7 @@ const router = createBrowserRouter([
     path: "/admin/inventory",
     element: (
       <AdminLayout>
-        <div className="p-8 text-center text-slate-500 italic">Inventory Management Module (Phase 2)</div>
+        <InventoryPage />
       </AdminLayout>
     ),
   },
@@ -53,7 +55,15 @@ const router = createBrowserRouter([
     path: "/admin/reports",
     element: (
       <AdminLayout>
-        <div className="p-8 text-center text-slate-500 italic">Reports & Analytics Module (Phase 3)</div>
+        <ReportsPage />
+      </AdminLayout>
+    ),
+  },
+  {
+    path: "/admin/settings",
+    element: (
+      <AdminLayout>
+        <div className="p-8 text-center text-slate-500 italic">Settings Module (Phase 4)</div>
       </AdminLayout>
     ),
   }
