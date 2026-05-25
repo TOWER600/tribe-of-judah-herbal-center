@@ -17,7 +17,7 @@ export default function ReportsPage() {
   const totalRevenue = sales.reduce((acc, s) => acc + s.total, 0);
   const totalTransactions = sales.length;
   const avgTicket = totalTransactions > 0 ? totalRevenue / totalTransactions : 0;
-  // Use a non-mutating sort for display
+  // Use a shallow copy to prevent state mutations during sort
   const sortedSales = [...sales].sort((a, b) => b.timestamp - a.timestamp);
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -102,8 +102,8 @@ export default function ReportsPage() {
     </div>
   );
 }
-function KPICard({ title, value, icon: Icon, color }: any) {
-  const colors: any = {
+function KPICard({ title, value, icon: Icon, color }: { title: string, value: string, icon: any, color: string }) {
+  const colors: Record<string, string> = {
     emerald: "text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 dark:text-emerald-400",
     blue: "text-blue-600 bg-blue-50 dark:bg-blue-900/20 dark:text-blue-400",
     indigo: "text-indigo-600 bg-indigo-50 dark:bg-indigo-900/20 dark:text-indigo-400",
@@ -112,7 +112,7 @@ function KPICard({ title, value, icon: Icon, color }: any) {
     <Card className="shadow-sm border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
       <CardContent className="pt-6">
         <div className="flex items-center justify-between">
-          <div className={`p-2 rounded-lg ${colors[color]}`}>
+          <div className={`p-2 rounded-lg ${colors[color] || colors.emerald}`}>
             <Icon className="w-5 h-5" />
           </div>
         </div>

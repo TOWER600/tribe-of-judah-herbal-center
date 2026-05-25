@@ -51,18 +51,21 @@ export function TransferModal({ open, onOpenChange, product, onSuccess }: Transf
     );
   }
   const handleTransfer = async () => {
-    if (!product || !fromBranch || !toBranch || fromBranch === toBranch) {
-      toast.error("Please select different source and destination branches");
+    if (!product || !fromBranch || !toBranch) {
+      toast.error("Please select source and destination branches");
+      return;
+    }
+    if (fromBranch === toBranch) {
+      toast.error("Source and destination branches must be different");
       return;
     }
     const qty = parseInt(quantity, 10);
     if (isNaN(qty) || qty <= 0 || qty > product.totalStock) {
-      toast.error(`Invalid quantity. Must be between 1 and ${product.totalStock}`);
+      toast.error(`Invalid quantity. Must be a whole number between 1 and ${product.totalStock}`);
       return;
     }
     setIsSubmitting(true);
     try {
-      // Logic for stock transfer (Deduct from current totalStock in this demo)
       await api('/api/products', {
         method: 'POST',
         body: JSON.stringify({
@@ -72,15 +75,16 @@ export function TransferModal({ open, onOpenChange, product, onSuccess }: Transf
       });
       const fromName = branches?.find(b => b.id === fromBranch)?.name || 'Source';
       const toName = branches?.find(b => b.id === toBranch)?.name || 'Destination';
-      toast.success(`Transferred ${qty} ${product.unit}s from ${fromName} to ${toName}`);
+      toast.success(`Inventory updated: ${qty} ${product.unit}s moving from ${fromName} to ${toName}`);
       onSuccess();
     } catch (error) {
-      toast.error("Stock transfer failed. Please try again.");
+      toast.error("Stock transfer registry failed");
+      console.error(error);
     } finally {
       setIsSubmitting(false);
     }
   };
-  const parsedQty = parseInt(quantity, 10) || 0;
+  const parsedQty = Math.floor(parseFloat(quantity) || 0);
   const remainingQty = Math.max(0, (product?.totalStock || 0) - parsedQty);
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -98,7 +102,7 @@ export function TransferModal({ open, onOpenChange, product, onSuccess }: Transf
                 <SelectTrigger><SelectValue placeholder="From" /></SelectTrigger>
                 <SelectContent>
                   {branches?.map(b => (
-                    <SelectItem key={b.id} value={b.id}>{b.name.includes(' - ') ? b.name.split(' - ')[1] : b.name}</SelectItem>
+                    <SelectItem key={b.id} value={b.id}>{b.name.split(' - ').pop()}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -110,7 +114,7 @@ export function TransferModal({ open, onOpenChange, product, onSuccess }: Transf
                 <SelectTrigger><SelectValue placeholder="To" /></SelectTrigger>
                 <SelectContent>
                   {branches?.map(b => (
-                    <SelectItem key={b.id} value={b.id}>{b.name.includes(' - ') ? b.name.split(' - ')[1] : b.name}</SelectItem>
+                    <SelectItem key={b.id} value={b.id}>{b.name.split(' - ').pop()}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -118,17 +122,18 @@ export function TransferModal({ open, onOpenChange, product, onSuccess }: Transf
           </div>
           <div className="space-y-2">
             <div className="flex justify-between items-center">
-              <Label>Transfer Quantity</Label>
+              <Label>Transfer Quantity (Whole {product?.unit}s)</Label>
               <span className="text-xs text-muted-foreground font-medium">
-                Max: {product?.totalStock} {product?.unit}s
+                Max: {product?.totalStock}
               </span>
             </div>
             <Input
               type="number"
               value={quantity}
-              onChange={(e) => setQuantity(e.target.value)}
+              onChange={(e) => setQuantity(e.target.value.replace(/[^0-9]/g, ''))}
               className="text-lg font-bold text-center h-12 bg-slate-50 dark:bg-slate-800"
               min="1"
+              step="1"
               max={product?.totalStock}
             />
           </div>

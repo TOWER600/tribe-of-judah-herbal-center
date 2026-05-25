@@ -42,12 +42,12 @@ export function CheckoutModal({ total, children }: { total: number, children: Re
       });
       setIsCompleted(true);
       toast.success("Sale completed successfully!");
-      // Delay printing to allow UI to update
+      // Short delay to ensure Success UI is visible before print dialog
       setTimeout(() => {
         window.print();
-      }, 500);
+      }, 700);
     } catch (error) {
-      toast.error("Failed to record transaction. Please try again.");
+      toast.error("Critical: Failed to sync transaction. Check connection.");
       console.error(error);
     } finally {
       setIsSubmitting(false);
@@ -131,44 +131,47 @@ export function CheckoutModal({ total, children }: { total: number, children: Re
             </Button>
           </div>
         )}
-        {/* Hidden Receipt for Printing */}
         <div className="hidden print:block fixed inset-0 bg-white p-8 font-mono text-sm print-receipt">
-          <div className="text-center space-y-1 mb-6">
+          <div className="text-center space-y-1 mb-4">
             <h1 className="font-bold text-xl uppercase">Tribe of Judah</h1>
-            <p>Herbal Center - {branch.name}</p>
-            <p>{branch.location}</p>
-            <p>Tel: +233 24 000 0000</p>
-            <div className="border-t border-dashed my-2" />
+            <p className="text-xs uppercase tracking-widest font-bold">Herbal Center</p>
+            <p>{branch.name}</p>
+            <p className="text-[10px]">{branch.location}</p>
+            <div className="border-t border-dashed my-3" />
           </div>
-          <div className="space-y-2 mb-6">
+          <div className="space-y-1 mb-4 text-[12px]">
             <div className="flex justify-between">
               <span>Date:</span>
               <span>{new Date().toLocaleString()}</span>
             </div>
+            <div className="flex justify-between">
+              <span>Terminal:</span>
+              <span className="uppercase">{pricingMode} POS</span>
+            </div>
           </div>
-          <table className="w-full mb-6">
+          <table className="w-full mb-4 text-[12px]">
             <thead className="border-b border-dashed">
-              <tr className="text-left">
+              <tr className="text-left font-bold">
                 <th className="py-2">Item</th>
                 <th className="text-right py-2">Qty</th>
                 <th className="text-right py-2">Total</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-dashed divide-slate-200">
               {cartItems.map(item => {
                 const price = pricingMode === 'retail' ? item.retailPrice : item.wholesalePrice;
                 return (
                   <tr key={item.id}>
-                    <td className="py-1">{item.name}</td>
+                    <td className="py-1 pr-2 truncate max-w-[120px]">{item.name}</td>
                     <td className="text-right py-1">{item.quantity}</td>
-                    <td className="text-right py-1">₵{(price * item.quantity).toFixed(2)}</td>
+                    <td className="text-right py-1 font-bold">₵{(price * item.quantity).toFixed(2)}</td>
                   </tr>
                 );
               })}
             </tbody>
           </table>
-          <div className="space-y-1 border-t border-dashed pt-4 mb-8">
-            <div className="flex justify-between font-bold">
+          <div className="space-y-1 border-t border-dashed pt-4 mb-8 text-[13px]">
+            <div className="flex justify-between font-black text-base">
               <span>TOTAL:</span>
               <span>₵{total.toFixed(2)}</span>
             </div>
@@ -176,14 +179,14 @@ export function CheckoutModal({ total, children }: { total: number, children: Re
               <span>CASH TENDERED:</span>
               <span>₵{amountTendered.toFixed(2)}</span>
             </div>
-            <div className="flex justify-between">
+            <div className="flex justify-between font-bold">
               <span>CHANGE:</span>
               <span>₵{change.toFixed(2)}</span>
             </div>
           </div>
-          <div className="text-center space-y-1">
-            <p>Thank you for choosing Nature's Remedy!</p>
-            <p>Stay Healthy.</p>
+          <div className="text-center space-y-1 text-[10px] mt-10">
+            <p className="font-bold">Thank you for choosing Nature's Remedy!</p>
+            <p>Visit us again. Stay Healthy.</p>
           </div>
         </div>
       </DialogContent>
