@@ -4,11 +4,12 @@ import { api } from '@/lib/api-client';
 import { Sale } from '@shared/types';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { format } from 'date-fns';
-import { Receipt, Calendar, CreditCard, ShoppingCart, TrendingUp } from 'lucide-react';
+import { Receipt, Calendar, CreditCard, ShoppingCart, TrendingUp, RefreshCw } from 'lucide-react';
 export default function ReportsPage() {
-  const { data: salesData, isLoading } = useQuery({
+  const { data: salesData, isLoading, refetch } = useQuery({
     queryKey: ['sales'],
     queryFn: () => api<{ items: Sale[] }>('/api/sales')
   });
@@ -19,9 +20,15 @@ export default function ReportsPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div className="py-8 md:py-10 lg:py-12 space-y-8">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Sales & Analytics</h1>
-          <p className="text-muted-foreground mt-1">Detailed transaction history and performance metrics.</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Sales & Analytics</h1>
+            <p className="text-muted-foreground mt-1">Detailed transaction history and performance metrics.</p>
+          </div>
+          <Button variant="outline" size="sm" onClick={() => refetch()} className="gap-2">
+            <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+            Refresh Data
+          </Button>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <KPICard title="Total Revenue" value={`₵${totalRevenue.toLocaleString()}`} icon={TrendingUp} color="emerald" />
@@ -35,7 +42,7 @@ export default function ReportsPage() {
           </div>
           <ScrollArea className="h-[600px]">
             {isLoading ? (
-              <div className="p-12 text-center animate-pulse">Loading transactions...</div>
+              <div className="p-12 text-center text-muted-foreground animate-pulse">Loading transactions...</div>
             ) : sales.length === 0 ? (
               <div className="p-12 text-center text-muted-foreground italic">No transactions recorded yet.</div>
             ) : (
@@ -64,7 +71,7 @@ export default function ReportsPage() {
                           <p className="text-xl font-black text-emerald-600">₵{sale.total.toFixed(2)}</p>
                         </div>
                         <div className="flex flex-col items-end gap-1">
-                           <Badge className="bg-blue-50 text-blue-700 hover:bg-blue-50 border-none gap-1">
+                           <Badge className="bg-blue-50 text-blue-700 hover:bg-blue-50 border-none gap-1 dark:bg-blue-900/20 dark:text-blue-400">
                              <CreditCard className="w-3 h-3" /> {sale.paymentMethod.toUpperCase()}
                            </Badge>
                         </div>
@@ -92,9 +99,9 @@ export default function ReportsPage() {
 }
 function KPICard({ title, value, icon: Icon, color }: any) {
   const colors: any = {
-    emerald: "text-emerald-600 bg-emerald-50",
-    blue: "text-blue-600 bg-blue-50",
-    indigo: "text-indigo-600 bg-indigo-50",
+    emerald: "text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 dark:text-emerald-400",
+    blue: "text-blue-600 bg-blue-50 dark:bg-blue-900/20 dark:text-blue-400",
+    indigo: "text-indigo-600 bg-indigo-50 dark:bg-indigo-900/20 dark:text-indigo-400",
   };
   return (
     <Card className="shadow-sm border-slate-200 dark:border-slate-800">

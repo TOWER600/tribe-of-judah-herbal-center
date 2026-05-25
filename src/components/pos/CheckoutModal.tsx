@@ -3,22 +3,55 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { CheckCircle2, Printer } from 'lucide-react';
+import { CheckCircle2, Loader2 } from 'lucide-react';
 import { usePosStore } from '@/stores/usePosStore';
+import { api } from '@/lib/api-client';
+import { toast } from 'sonner';
 export function CheckoutModal({ total, children }: { total: number, children: React.ReactNode }) {
   const [tendered, setTendered] = useState<string>('');
   const [isCompleted, setIsCompleted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const cartItems = usePosStore(s => s.cartItems);
   const branch = usePosStore(s => s.currentBranch);
+  const pricingMode = usePosStore(s => s.pricingMode);
   const clearCart = usePosStore(s => s.clearCart);
   const amountTendered = parseFloat(tendered) || 0;
   const change = amountTendered - total;
-  const handleComplete = () => {
-    setIsCompleted(true);
-    // Print handled by a separate component or window.print call
-    setTimeout(() => {
-      window.print();
-    }, 100);
+  const handleComplete = async () => {
+    setIsSubmitting(true);
+    try {
+      const salePayload = {
+        branchId: branch.id,
+        branchName: branch.name,
+        items: cartItems.map(item => ({
+          productId: item.id,
+          name: item.name,
+          quantity: item.quantity,
+          price: pricingMode === 'retail' ? item.retailPrice : item.wholesalePrice,
+          total: (pricingMode === 'retail' ? item.retailPrice : item.wholesalePrice) * item.quantity
+        })),
+        subtotal: total * 0.95,
+        tax: total * 0.05,
+        total: total,
+        paymentMethod: 'cash',
+        pricingMode: pricingMode
+      };
+      await api('/api/sales', {
+        method: 'POST',
+        body: JSON.stringify(salePayload)
+      });
+      setIsCompleted(true);
+      toast.success("Sale completed successfully!");
+      // Delay printing to allow UI to update
+      setTimeout(() => {
+        window.print();
+      }, 500);
+    } catch (error) {
+      toast.error("Failed to record transaction. Please try again.");
+      console.error(error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
   const handleClose = () => {
     if (isCompleted) clearCart();
@@ -44,10 +77,10 @@ export function CheckoutModal({ total, children }: { total: number, children: Re
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label className="text-lg font-bold">Cash Tendered</Label>
-                  <Input 
-                    type="number" 
-                    placeholder="Enter amount received..." 
-                    className="h-14 text-2xl font-bold text-center bg-slate-50"
+                  <Input
+                    type="number"
+                    placeholder="Enter amount received..."
+                    className="h-14 text-2xl font-bold text-center bg-slate-50 dark:bg-slate-800"
                     value={tendered}
                     onChange={(e) => setTendered(e.target.value)}
                     autoFocus
@@ -55,9 +88,9 @@ export function CheckoutModal({ total, children }: { total: number, children: Re
                 </div>
                 <div className="grid grid-cols-3 gap-2">
                   {[20, 50, 100].map(amt => (
-                    <Button 
-                      key={amt} 
-                      variant="outline" 
+                    <Button
+                      key={amt}
+                      variant="outline"
                       onClick={() => setTendered(amt.toString())}
                       className="h-12 font-bold"
                     >
@@ -67,16 +100,17 @@ export function CheckoutModal({ total, children }: { total: number, children: Re
                 </div>
               </div>
               <div className="flex justify-between items-center px-4 py-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl">
-                <span className="font-bold text-emerald-700">Change</span>
+                <span className="font-bold text-emerald-700 dark:text-emerald-400">Change</span>
                 <span className="text-2xl font-black text-emerald-600">
                   ₵{Math.max(0, change).toFixed(2)}
                 </span>
               </div>
-              <Button 
-                className="w-full h-14 bg-emerald-600 hover:bg-emerald-700 font-bold text-lg"
-                disabled={amountTendered < total}
+              <Button
+                className="w-full h-14 bg-emerald-600 hover:bg-emerald-700 font-bold text-lg gap-2"
+                disabled={amountTendered < total || isSubmitting}
                 onClick={handleComplete}
               >
+                {isSubmitting && <Loader2 className="w-5 h-5 animate-spin" />}
                 Complete Sale
               </Button>
             </div>
@@ -84,7 +118,7 @@ export function CheckoutModal({ total, children }: { total: number, children: Re
         ) : (
           <div className="p-12 text-center space-y-6">
             <div className="flex justify-center">
-              <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center">
+              <div className="w-20 h-20 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center">
                 <CheckCircle2 className="w-12 h-12 text-emerald-600" />
               </div>
             </div>
@@ -111,10 +145,6 @@ export function CheckoutModal({ total, children }: { total: number, children: Re
               <span>Date:</span>
               <span>{new Date().toLocaleString()}</span>
             </div>
-            <div className="flex justify-between">
-              <span>Receipt #:</span>
-              <span>{Math.random().toString(36).substring(7).toUpperCase()}</span>
-            </div>
           </div>
           <table className="w-full mb-6">
             <thead className="border-b border-dashed">
@@ -125,13 +155,16 @@ export function CheckoutModal({ total, children }: { total: number, children: Re
               </tr>
             </thead>
             <tbody>
-              {cartItems.map(item => (
-                <tr key={item.id}>
-                  <td className="py-1">{item.name}</td>
-                  <td className="text-right py-1">{item.quantity}</td>
-                  <td className="text-right py-1">₵{(item.retailPrice * item.quantity).toFixed(2)}</td>
-                </tr>
-              ))}
+              {cartItems.map(item => {
+                const price = pricingMode === 'retail' ? item.retailPrice : item.wholesalePrice;
+                return (
+                  <tr key={item.id}>
+                    <td className="py-1">{item.name}</td>
+                    <td className="text-right py-1">{item.quantity}</td>
+                    <td className="text-right py-1">₵{(price * item.quantity).toFixed(2)}</td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
           <div className="space-y-1 border-t border-dashed pt-4 mb-8">

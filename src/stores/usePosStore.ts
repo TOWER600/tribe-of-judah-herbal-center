@@ -1,8 +1,6 @@
 import { create } from 'zustand';
-import { Product, Branch, MOCK_BRANCHES } from '@shared/mock-data';
-export interface CartItem extends Product {
-  quantity: number;
-}
+import { Product, Branch, CartItem } from '@shared/types';
+import { MOCK_BRANCHES } from '@shared/mock-data';
 interface PosState {
   cartItems: CartItem[];
   currentBranch: Branch;

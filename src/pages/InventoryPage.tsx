@@ -1,31 +1,35 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api-client';
-import { Product, ApiResponse } from '@shared/types';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import { Product } from '@shared/types';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
 } from "@/components/ui/table";
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Search, Plus, Package, Filter, ArrowUpRight } from 'lucide-react';
+import { Search, Plus, Filter, ArrowUpRight } from 'lucide-react';
 import { format } from 'date-fns';
+import { toast } from 'sonner';
 export default function InventoryPage() {
   const [searchTerm, setSearchTerm] = useState('');
-  const { data: productsData, isLoading } = useQuery({
+  const { data: productsData, isLoading, refetch } = useQuery({
     queryKey: ['products'],
     queryFn: () => api<{ items: Product[] }>('/api/products')
   });
   const products = productsData?.items ?? [];
-  const filteredProducts = products.filter(p => 
-    p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+  const filteredProducts = products.filter(p =>
+    p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     p.sku.toLowerCase().includes(searchTerm.toLowerCase())
   );
+  const handleRestock = (productName: string) => {
+    toast.success(`Restock order initiated for ${productName}`);
+  };
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div className="py-8 md:py-10 lg:py-12 space-y-8">
@@ -41,8 +45,8 @@ export default function InventoryPage() {
         <div className="flex flex-col md:flex-row gap-4">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input 
-              placeholder="Search by name or SKU..." 
+            <Input
+              placeholder="Search by name or SKU..."
               className="pl-10 h-11"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -69,7 +73,7 @@ export default function InventoryPage() {
               {isLoading ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <TableRow key={i}>
-                    <TableCell colSpan={7} className="h-12 text-center animate-pulse bg-slate-50/50" />
+                    <TableCell colSpan={7} className="h-16 text-center animate-pulse bg-slate-50/50" />
                   </TableRow>
                 ))
               ) : filteredProducts.length === 0 ? (
@@ -85,7 +89,7 @@ export default function InventoryPage() {
                   const isExpiringSoon = expiryDate.getTime() < Date.now() + (30 * 24 * 60 * 60 * 1000);
                   return (
                     <TableRow key={product.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
-                      <TableCell>
+                      <TableCell className="py-4">
                         <div className="flex flex-col">
                           <span className="font-bold text-slate-900 dark:text-white">{product.name}</span>
                           <span className="text-xs text-muted-foreground uppercase tracking-wider">{product.sku}</span>
@@ -109,15 +113,20 @@ export default function InventoryPage() {
                       </TableCell>
                       <TableCell>
                         {isLowStock ? (
-                          <Badge className="bg-red-100 text-red-700 hover:bg-red-100 border-none">Low Stock</Badge>
+                          <Badge className="bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 hover:bg-red-100 border-none">Low Stock</Badge>
                         ) : isExpiringSoon ? (
-                          <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100 border-none">Expiring Soon</Badge>
+                          <Badge className="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 hover:bg-amber-100 border-none">Expiring Soon</Badge>
                         ) : (
-                          <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 border-none">In Stock</Badge>
+                          <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 hover:bg-emerald-100 border-none">In Stock</Badge>
                         )}
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button variant="ghost" size="sm" className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-900/20"
+                          onClick={() => handleRestock(product.name)}
+                        >
                           Restock <ArrowUpRight className="ml-1 w-3 h-3" />
                         </Button>
                       </TableCell>
