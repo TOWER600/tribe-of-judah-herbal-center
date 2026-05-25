@@ -34,9 +34,9 @@ const productSchema = z.object({
   name: z.string().min(2, "Name is required"),
   sku: z.string().min(3, "SKU is required"),
   category: z.string().min(1, "Category is required"),
-  retailPrice: z.coerce.number().min(0.01),
-  wholesalePrice: z.coerce.number().min(0.01),
-  totalStock: z.coerce.number().min(0),
+  retailPrice: z.coerce.number().min(0.01, "Price must be at least 0.01"),
+  wholesalePrice: z.coerce.number().min(0.01, "Price must be at least 0.01"),
+  totalStock: z.coerce.number().min(0, "Stock cannot be negative"),
   unit: z.string().min(1, "Unit is required"),
   expiryDate: z.string().min(1, "Expiry date is required"),
 });
@@ -101,6 +101,7 @@ export function ProductModal({ open, onOpenChange, product, onSuccess }: Product
       onSuccess();
     } catch (error) {
       toast.error("Failed to save product");
+      console.error(error);
     }
   };
   return (
