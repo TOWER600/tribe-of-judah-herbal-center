@@ -90,7 +90,9 @@ export default function InventoryPage() {
               {isLoading ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <TableRow key={i}>
-                    <TableCell colSpan={6} className="h-16 text-center animate-pulse bg-slate-50/50" />
+                    <TableCell colSpan={6} className="h-16">
+                       <div className="h-8 bg-slate-100 dark:bg-slate-800 animate-pulse rounded-md" />
+                    </TableCell>
                   </TableRow>
                 ))
               ) : filteredProducts.length === 0 ? (
@@ -137,17 +139,17 @@ export default function InventoryPage() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
+                          <Button
+                            variant="ghost"
+                            size="icon"
                             className="h-8 w-8 text-slate-400 hover:text-emerald-600"
                             onClick={() => handleTransfer(product)}
                           >
                             <ArrowRightLeft className="w-4 h-4" />
                           </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
+                          <Button
+                            variant="ghost"
+                            size="icon"
                             className="h-8 w-8 text-slate-400 hover:text-blue-600"
                             onClick={() => handleEdit(product)}
                           >
@@ -163,9 +165,9 @@ export default function InventoryPage() {
           </Table>
         </div>
       </div>
-      <ProductModal 
-        open={isProductModalOpen} 
-        onOpenChange={setIsProductModalOpen} 
+      <ProductModal
+        open={isProductModalOpen}
+        onOpenChange={setIsProductModalOpen}
         product={selectedProduct}
         onSuccess={() => {
           refetch();

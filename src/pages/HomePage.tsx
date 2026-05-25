@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Leaf, Lock, User, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Leaf, Lock, User, Eye, EyeOff, Loader2, Store } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -15,23 +15,29 @@ export function HomePage() {
     username: 'admin',
     password: 'password123'
   });
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleLogin = (username: string, branchId?: string) => {
     setIsLoading(true);
     // Mock authentication delay
     setTimeout(() => {
-      const { username } = formData;
       if (username === 'admin') {
         localStorage.setItem('user_role', 'admin');
+        localStorage.removeItem('branch_id');
         toast.success("Welcome back, Administrator");
         navigate('/admin');
       } else {
         localStorage.setItem('user_role', 'cashier');
-        toast.success("Terminal ready for sales");
+        if (branchId) {
+          localStorage.setItem('branch_id', branchId);
+        }
+        toast.success(`Terminal ready: ${branchId === 'br-1' ? 'Kasoa' : 'Kaneshie'}`);
         navigate('/pos');
       }
       setIsLoading(false);
     }, 800);
+  };
+  const onFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    handleLogin(formData.username);
   };
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-950 p-4 relative overflow-hidden">
@@ -52,17 +58,17 @@ export function HomePage() {
         <Card className="border-slate-200 dark:border-slate-800 shadow-xl shadow-emerald-900/5">
           <CardHeader className="space-y-1">
             <CardTitle className="text-xl font-bold">Secure Access</CardTitle>
-            <CardDescription>Enter your credentials to access the system</CardDescription>
+            <CardDescription>Enter your credentials or use quick access</CardDescription>
           </CardHeader>
-          <CardContent>
-            <form onSubmit={handleLogin} className="space-y-4">
+          <CardContent className="space-y-6">
+            <form onSubmit={onFormSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="username">Username</Label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                  <Input 
+                  <Input
                     id="username"
-                    placeholder="Enter your username" 
+                    placeholder="Enter your username"
                     className="pl-10"
                     value={formData.username}
                     onChange={(e) => setFormData(prev => ({ ...prev, username: e.target.value }))}
@@ -74,16 +80,16 @@ export function HomePage() {
                 <Label htmlFor="password">Password</Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                  <Input 
+                  <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
-                    placeholder="••••••••" 
+                    placeholder="••••••••"
                     className="pl-10"
                     value={formData.password}
                     onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
                     required
                   />
-                  <button 
+                  <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
@@ -92,8 +98,8 @@ export function HomePage() {
                   </button>
                 </div>
               </div>
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 className="w-full bg-emerald-600 hover:bg-emerald-700 h-11 font-bold"
                 disabled={isLoading}
               >
@@ -101,11 +107,41 @@ export function HomePage() {
                 Sign In to Portal
               </Button>
             </form>
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t border-slate-200 dark:border-slate-800" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-white dark:bg-slate-900 px-2 text-slate-500 font-bold">Quick Terminal Access</span>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <Button 
+                variant="outline" 
+                className="h-20 flex-col gap-1 border-emerald-100 hover:bg-emerald-50 dark:hover:bg-emerald-900/10"
+                onClick={() => handleLogin('cashier_kasoa', 'br-1')}
+                disabled={isLoading}
+              >
+                <Store className="w-5 h-5 text-emerald-600" />
+                <span className="font-bold">Kasoa</span>
+                <span className="text-[10px] text-muted-foreground uppercase">Terminal</span>
+              </Button>
+              <Button 
+                variant="outline" 
+                className="h-20 flex-col gap-1 border-emerald-100 hover:bg-emerald-50 dark:hover:bg-emerald-900/10"
+                onClick={() => handleLogin('cashier_kaneshie', 'br-2')}
+                disabled={isLoading}
+              >
+                <Store className="w-5 h-5 text-emerald-600" />
+                <span className="font-bold">Kaneshie</span>
+                <span className="text-[10px] text-muted-foreground uppercase">Terminal</span>
+              </Button>
+            </div>
           </CardContent>
         </Card>
         <p className="text-center text-slate-400 text-xs">
           Authorized personnel only. All access is logged and monitored.<br />
-          v2.4.0 • © {new Date().getFullYear()} Tribe of Judah
+          v2.5.0 • © {new Date().getFullYear()} Tribe of Judah
         </p>
       </div>
       <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none" />

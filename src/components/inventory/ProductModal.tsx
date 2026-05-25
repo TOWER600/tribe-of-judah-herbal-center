@@ -40,6 +40,7 @@ const productSchema = z.object({
   unit: z.string().min(1, "Unit is required"),
   expiryDate: z.string().min(1, "Expiry date is required"),
 });
+type ProductFormValues = z.infer<typeof productSchema>;
 interface ProductModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -47,7 +48,7 @@ interface ProductModalProps {
   onSuccess: () => void;
 }
 export function ProductModal({ open, onOpenChange, product, onSuccess }: ProductModalProps) {
-  const form = useForm<z.infer<typeof productSchema>>({
+  const form = useForm<ProductFormValues>({
     resolver: zodResolver(productSchema),
     defaultValues: {
       name: '',
@@ -61,31 +62,33 @@ export function ProductModal({ open, onOpenChange, product, onSuccess }: Product
     },
   });
   useEffect(() => {
-    if (product) {
-      form.reset({
-        name: product.name,
-        sku: product.sku,
-        category: product.category,
-        retailPrice: product.retailPrice,
-        wholesalePrice: product.wholesalePrice,
-        totalStock: product.totalStock,
-        unit: product.unit,
-        expiryDate: product.expiryDate,
-      });
-    } else {
-      form.reset({
-        name: '',
-        sku: '',
-        category: '',
-        retailPrice: 0,
-        wholesalePrice: 0,
-        totalStock: 0,
-        unit: 'Bottle',
-        expiryDate: '',
-      });
+    if (open) {
+      if (product) {
+        form.reset({
+          name: product.name,
+          sku: product.sku,
+          category: product.category,
+          retailPrice: product.retailPrice,
+          wholesalePrice: product.wholesalePrice,
+          totalStock: product.totalStock,
+          unit: product.unit,
+          expiryDate: product.expiryDate,
+        });
+      } else {
+        form.reset({
+          name: '',
+          sku: '',
+          category: '',
+          retailPrice: 0,
+          wholesalePrice: 0,
+          totalStock: 0,
+          unit: 'Bottle',
+          expiryDate: '',
+        });
+      }
     }
-  }, [product, form, open]);
-  const onSubmit = async (values: z.infer<typeof productSchema>) => {
+  }, [product, open, form]);
+  const onSubmit = async (values: ProductFormValues) => {
     try {
       await api('/api/products', {
         method: 'POST',
@@ -139,7 +142,7 @@ export function ProductModal({ open, onOpenChange, product, onSuccess }: Product
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Category</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
                       <FormControl>
                         <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
                       </FormControl>

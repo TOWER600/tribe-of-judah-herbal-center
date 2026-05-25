@@ -11,6 +11,7 @@ interface PosState {
   updateQuantity: (productId: string, quantity: number) => void;
   togglePricingMode: () => void;
   setBranch: (branch: Branch) => void;
+  setBranchById: (branchId: string) => void;
   clearCart: () => void;
 }
 export const usePosStore = create<PosState>((set) => ({
@@ -40,5 +41,10 @@ export const usePosStore = create<PosState>((set) => ({
     pricingMode: state.pricingMode === 'retail' ? 'wholesale' : 'retail'
   })),
   setBranch: (branch) => set({ currentBranch: branch }),
+  setBranchById: (branchId) => set((state) => {
+    const branch = MOCK_BRANCHES.find(b => b.id === branchId);
+    if (branch) return { currentBranch: branch };
+    return state;
+  }),
   clearCart: () => set({ cartItems: [] }),
 }));

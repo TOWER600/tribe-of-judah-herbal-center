@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { LogOut, User, MapPin, Tag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -8,6 +8,13 @@ export function PosLayout({ children }: { children: React.ReactNode }) {
   const currentBranch = usePosStore(s => s.currentBranch);
   const pricingMode = usePosStore(s => s.pricingMode);
   const togglePricingMode = usePosStore(s => s.togglePricingMode);
+  const setBranchById = usePosStore(s => s.setBranchById);
+  useEffect(() => {
+    const savedBranchId = localStorage.getItem('branch_id');
+    if (savedBranchId) {
+      setBranchById(savedBranchId);
+    }
+  }, [setBranchById]);
   return (
     <div className="h-screen w-screen flex flex-col bg-slate-50 dark:bg-slate-950 overflow-hidden select-none">
       <header className="h-16 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-6 flex-shrink-0 z-20">
@@ -24,7 +31,7 @@ export function PosLayout({ children }: { children: React.ReactNode }) {
               <MapPin className="w-4 h-4" />
               <span className="text-sm font-medium">{currentBranch.name}</span>
             </div>
-            <Badge 
+            <Badge
               variant={pricingMode === 'wholesale' ? 'default' : 'outline'}
               className="cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800"
               onClick={togglePricingMode}
