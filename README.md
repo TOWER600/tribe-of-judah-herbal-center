@@ -1,6 +1,6 @@
 # Cloudflare Workers + React Template
 
-[cloudflarebutton]
+[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/TOWER600/tribe-of-judah-herbal-center)
 
 A modern, production-ready full-stack template featuring React frontend with Vite, Cloudflare Workers backend, Durable Objects for stateful entities, and shadcn/ui components.
 
@@ -73,7 +73,7 @@ Deploy to Cloudflare Workers with a single command:
 bun run deploy
 ```
 
-[cloudflarebutton]
+[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/TOWER600/tribe-of-judah-herbal-center)
 
 The project uses `wrangler.jsonc` with Durable Object migrations and asset handling configured for SPA routing. All API routes are served by the Worker.
 
